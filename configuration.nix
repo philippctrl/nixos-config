@@ -156,14 +156,6 @@ networking.wireless = {
   virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;
-    
-    # Automate Docker Daemon cleanup
-    daemon.settings = {
-      pruning = {
-        enabled = true;
-        interval = "24h";
-      };
-    };
   };
 			
 
