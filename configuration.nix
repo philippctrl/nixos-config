@@ -92,6 +92,41 @@ networking.wireless = {
 #'';
 
 
+  services.prometheus = {
+    enable = true;
+    port = 9090;
+    exporters.node = {
+      enable = true;
+      port = 9100;
+      enabledCollectors = [ "systemd" ];
+    };
+    scrapeConfigs = [
+      {
+        job_name = "node";
+        static_configs = [{ targets = [ "localhost:9100" ]; }];
+      }
+    ];
+  };
+
+  services.grafana = {
+    enable = true;
+    settings.server = {
+      http_addr = "0.0.0.0";
+      http_port = 3000;
+    };
+    provision = {
+      enable = true;
+      datasources.settings.datasources = [
+        {
+          name = "Prometheus";
+          type = "prometheus";
+          url = "http://localhost:9090";
+          isDefault = true;
+        }
+      ];
+    };
+  };
+
   services.openssh = {
     enable = true;
     settings.PasswordAuthentication = false; # TODO deactivate
@@ -172,8 +207,7 @@ networking.wireless = {
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
-   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-   networking.firewall.allowedUDPPorts = [ 67 68 ];
+   networking.firewall.allowedTCPPorts = [ 22 80 443 3000 9090 9100 ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
