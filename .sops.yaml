@@ -1,0 +1,18 @@
+keys:
+  - &server "age1u2gzgamqeuqyw7d090ywhq6gkhta6jw3tqfgwgcxdl0744zmdfusxl7mqf"
+  - &mydev1 "age17c674ss7q9asynw3pscz3dyfwemwuyl4t8kurhep7ynz60jlzy7swm3h3q"
+
+
+
+creation_rules:
+  - path_regex: secrets/.*\.yaml$
+    key_groups:
+      - age:
+        - *server
+        - *mydev1
+
+  - path_regex: secrets/.*\.conf$
+    key_groups:
+      - age:
+        - *server
+        - *mydev1
