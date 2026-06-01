@@ -23,6 +23,8 @@ in
     sops
     iw
     iproute2
+    git
+    vim
   ];
 
   sops = {
