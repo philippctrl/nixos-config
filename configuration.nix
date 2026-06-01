@@ -122,6 +122,15 @@ networking.wireless = {
           isDefault = true;
         }
       ];
+      dashboards.settings.providers = [
+        {
+          name = "node-exporter";
+          options.path = pkgs.runCommand "grafana-dashboards" {} ''
+            mkdir -p $out
+            cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
+          '';
+        }
+      ];
     };
   };
 
@@ -130,6 +139,15 @@ networking.wireless = {
     settings.PasswordAuthentication = false; # TODO deactivate
     settings.PermitRootLogin = "yes";
   };
+
+  system.autoUpgrade = {
+    enable = true;
+    allowReboot = true;
+  };
+
+
+
+
 
 
 
