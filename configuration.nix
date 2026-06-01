@@ -30,10 +30,8 @@ in
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-    secrets.wifi_passphrase = {
-      restartUnits = [ "wpa_supplicant-wlp0s20f3.service" ];
-    };
   };
+
 
 
 sops.secrets.wpa_supplicant = {
