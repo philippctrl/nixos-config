@@ -98,10 +98,18 @@ networking.wireless = {
       port = 9100;
       enabledCollectors = [ "systemd" ];
     };
+    exporters.fail2ban = {
+      enable = true;
+      port = 9191;
+    };
     scrapeConfigs = [
       {
         job_name = "node";
         static_configs = [{ targets = [ "localhost:9100" ]; }];
+      }
+      {
+        job_name = "fail2ban";
+        static_configs = [{ targets = [ "localhost:9191" ]; }];
       }
     ];
   };
@@ -121,13 +129,20 @@ networking.wireless = {
           url = "http://localhost:9090";
           isDefault = true;
         }
+        {
+          name = "Loki";
+          type = "loki";
+          url = "http://localhost:3100";
+        }
       ];
       dashboards.settings.providers = [
         {
-          name = "node-exporter";
+          name = "provisioned";
           options.path = pkgs.runCommand "grafana-dashboards" {} ''
             mkdir -p $out
             cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
+            cp ${./grafana-dashboards/fail2ban-logs.json} $out/fail2ban-logs.json
+            cp ${./grafana-dashboards/fail2ban-locations.json} $out/fail2ban-locations.json
           '';
         }
       ];
@@ -161,10 +176,147 @@ networking.wireless = {
   services.logind.lidSwitch = "ignore";
 # -----------------------------------------------------------------------------
 # security
+
+  # Kernel-level audit trail: exec, privilege escalation, sensitive file writes
+  security.auditd.enable = true;
+  security.audit.enable = true;
+  security.audit.rules = [
+    "-a exit,always -F arch=b64 -S execve"         # all command execution
+    "-w /etc/passwd -p wa -k identity"              # user account changes
+    "-w /etc/shadow -p wa -k identity"
+    "-w /etc/sudoers -p wa -k sudoers"
+    "-w /var/log/auth.log -p wa -k auth_log"
+    "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
+  ];
+
   services.fail2ban = {
     enable = true;
     maxretry = 5;
     bantime = "1h";
+    # Escalating bans: each repeat offense multiplies the ban duration
+    bantime-increment = {
+      enable = true;
+      multipliers = "1 2 4 8 16 32 64";
+      maxtime = "168h"; # cap at 1 week
+      overalljails = true;
+    };
+    jails = {
+      sshd.settings = {
+        enabled = true;
+        port = "ssh";
+        filter = "sshd";
+        maxretry = 3;
+        bantime = "2h";
+      };
+      nginx-http-auth.settings = {
+        enabled = true;
+        port = "http,https";
+        filter = "nginx-http-auth";
+      };
+      nginx-botsearch.settings = {
+        enabled = true;
+        port = "http,https";
+        filter = "nginx-botsearch";
+        maxretry = 2;
+      };
+    };
+  };
+
+  # Log aggregation: ship systemd journal + auth logs into Loki for Grafana
+  services.loki = {
+    enable = true;
+    configuration = {
+      auth_enabled = false;
+      server.http_listen_port = 3100;
+      ingester = {
+        lifecycler = {
+          address = "127.0.0.1";
+          ring = {
+            kvstore.store = "inmemory";
+            replication_factor = 1;
+          };
+          final_sleep = "0s";
+        };
+        chunk_idle_period = "1h";
+        max_chunk_age = "1h";
+        chunk_target_size = 1048576;
+        chunk_retain_period = "30s";
+      };
+      schema_config.configs = [{
+        from = "2024-01-01";
+        store = "tsdb";
+        object_store = "filesystem";
+        schema = "v13";
+        index = {
+          prefix = "index_";
+          period = "24h";
+        };
+      }];
+      storage_config = {
+        tsdb_shipper = {
+          active_index_directory = "/var/lib/loki/tsdb-index";
+          cache_location = "/var/lib/loki/tsdb-cache";
+        };
+        filesystem.directory = "/var/lib/loki/chunks";
+      };
+      limits_config = {
+        reject_old_samples = true;
+        reject_old_samples_max_age = "168h";
+      };
+      compactor = {
+        working_directory = "/var/lib/loki/compactor";
+        compaction_interval = "10m";
+      };
+    };
+  };
+
+  services.promtail = {
+    enable = true;
+    configuration = {
+      server = {
+        http_listen_port = 9080;
+        grpc_listen_port = 0;
+      };
+      positions.filename = "/var/lib/promtail/positions.yaml";
+      clients = [{ url = "http://localhost:3100/loki/api/v1/push"; }];
+      scrape_configs = [
+        {
+          job_name = "journal";
+          journal = {
+            max_age = "12h";
+            labels = {
+              job = "systemd-journal";
+              host = "andromeda";
+            };
+          };
+          relabel_configs = [
+            {
+              source_labels = [ "__journal__systemd_unit" ];
+              target_label = "unit";
+            }
+            {
+              source_labels = [ "__journal__hostname" ];
+              target_label = "hostname";
+            }
+            {
+              source_labels = [ "__journal_priority_keyword" ];
+              target_label = "level";
+            }
+          ];
+        }
+        {
+          job_name = "auth";
+          static_configs = [{
+            targets = [ "localhost" ];
+            labels = {
+              job = "auth";
+              host = "andromeda";
+              __path__ = "/var/log/auth.log";
+            };
+          }];
+        }
+      ];
+    };
   };
 
 # -----------------------------------------------------------------------------
