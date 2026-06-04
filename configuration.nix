@@ -158,6 +158,7 @@ networking.wireless = {
     autoPrune.enable = true;
   };
 			
+  services.logind.lidSwitch = "ignore";
 
 # -----------------------------------------------------------------------------
 
