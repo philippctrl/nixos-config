@@ -326,17 +326,6 @@ networking.wireless = {
             }
           ];
         }
-        {
-          job_name = "auth";
-          static_configs = [{
-            targets = [ "localhost" ];
-            labels = {
-              job = "auth";
-              host = "andromeda";
-              __path__ = "/var/log/auth.log";
-            };
-          }];
-        }
       ];
     };
   };

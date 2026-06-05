@@ -2,89 +2,109 @@
   "title": "Security Logs",
   "uid": "security-logs",
   "schemaVersion": 36,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-24h", "to": "now" },
   "panels": [
     {
       "id": 1,
-      "title": "fail2ban Bans",
-      "type": "logs",
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "title": "SSH Connection Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{unit=\"fail2ban.service\"} |= \"Ban\"",
+          "expr": "sum(count_over_time({unit=\"sshd.service\"} [5m]))",
           "queryType": "range",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "sshd events / 5m"
         }
-      ],
-      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
+      ]
     },
     {
       "id": 2,
-      "title": "SSH Authentication Failures",
-      "type": "logs",
-      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
+      "title": "Failed / Invalid Login Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } },
+        "overrides": []
+      },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{unit=\"sshd.service\"} |= \"Failed\"",
+          "expr": "sum(count_over_time({unit=\"sshd.service\"} |~ \"Failed|Invalid\" [5m]))",
           "queryType": "range",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "failed logins / 5m"
         }
-      ],
-      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
+      ]
     },
     {
       "id": 3,
-      "title": "Auth Log",
+      "title": "SSH — Failed & Invalid Logins",
       "type": "logs",
-      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 7 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{job=\"auth\"}",
+          "expr": "{unit=\"sshd.service\"} |~ \"Failed|Invalid user|Invalid\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true, "sortOrder": "Descending" }
     },
     {
       "id": 4,
-      "title": "Ban Rate (last 24h)",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "title": "fail2ban — Bans",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 13, "w": 24, "h": 7 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({unit=\"fail2ban.service\"} |= \"Ban\" [5m]))",
+          "expr": "{unit=\"fail2ban.service\"} |~ \"Ban|Found\"",
           "queryType": "range",
-          "refId": "A",
-          "legendFormat": "bans per 5m"
+          "refId": "A"
         }
-      ]
+      ],
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true, "sortOrder": "Descending" }
     },
     {
       "id": 5,
-      "title": "SSH Failure Rate (last 24h)",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "title": "SSH — All Authentication Activity",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({unit=\"sshd.service\"} |= \"Failed\" [5m]))",
+          "expr": "{unit=\"sshd.service\"} |~ \"Accepted|Failed|Invalid|Disconnected|session opened|session closed\"",
           "queryType": "range",
-          "refId": "A",
-          "legendFormat": "failures per 5m"
+          "refId": "A"
         }
-      ]
+      ],
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true, "sortOrder": "Descending" }
+    },
+    {
+      "id": 6,
+      "title": "fail2ban — Service Activity",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 7 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{unit=\"fail2ban.service\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true, "sortOrder": "Descending" }
     }
   ]
 }
