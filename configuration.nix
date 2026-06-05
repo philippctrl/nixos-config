@@ -115,35 +115,41 @@ networking.wireless = {
     };
     provision = {
       enable = true;
-      datasources.settings.datasources = [
+      datasources.settings = {
+        apiVersion = 1;
+        datasources = [
         {
           name = "Prometheus";
           uid = "prometheus";
           type = "prometheus";
+          access = "proxy";
           url = "http://localhost:9090";
           isDefault = true;
           orgId = 1;
-          editable = false;
         }
         {
           name = "Loki";
           uid = "loki";
           type = "loki";
+          access = "proxy";
           url = "http://localhost:3100";
           orgId = 1;
-          editable = false;
         }
-      ];
-      dashboards.settings.providers = [
-        {
-          name = "provisioned";
-          options.path = pkgs.runCommand "grafana-dashboards" {} ''
-            mkdir -p $out
-            cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
-            cp ${./grafana-dashboards/security-logs.json} $out/security-logs.json
-          '';
-        }
-      ];
+        ];
+      };
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [
+          {
+            name = "provisioned";
+            options.path = pkgs.runCommand "grafana-dashboards" {} ''
+              mkdir -p $out
+              cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
+              cp ${./grafana-dashboards/security-logs.json} $out/security-logs.json
+            '';
+          }
+        ];
+      };
     };
   };
 
@@ -266,6 +272,23 @@ networking.wireless = {
         compaction_interval = "10m";
       };
     };
+  };
+
+  # Allow promtail to read the systemd journal
+  users.users.promtail = {
+    isSystemUser = true;
+    group = "promtail";
+    extraGroups = [ "systemd-journal" ];
+  };
+  users.groups.promtail = {};
+
+  systemd.services.promtail.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    User = "promtail";
+    Group = "promtail";
+    StateDirectory = "promtail";
+    ReadWritePaths = [ "/var/lib/promtail" ];
+    ExecStartPre = lib.mkForce "";
   };
 
   services.promtail = {
