@@ -124,6 +124,7 @@ networking.wireless = {
         }
         {
           name = "Loki";
+          uid = "Loki";
           type = "loki";
           url = "http://localhost:3100";
         }
@@ -134,6 +135,7 @@ networking.wireless = {
           options.path = pkgs.runCommand "grafana-dashboards" {} ''
             mkdir -p $out
             cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
+            cp ${./grafana-dashboards/security-logs.json} $out/security-logs.json
           '';
         }
       ];
