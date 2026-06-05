@@ -4,106 +4,67 @@
   "schemaVersion": 36,
   "version": 1,
   "refresh": "30s",
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
+  "time": { "from": "now-24h", "to": "now" },
   "panels": [
     {
       "id": 1,
       "title": "fail2ban Bans",
       "type": "logs",
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 24,
-        "h": 6
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "{unit=\"fail2ban.service\"} |= \"Ban\"",
+          "queryType": "range",
           "refId": "A"
         }
       ],
-      "options": {
-        "dedupStrategy": "none",
-        "showLabels": false,
-        "wrapLogMessage": true
-      }
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
     },
     {
       "id": 2,
       "title": "SSH Authentication Failures",
       "type": "logs",
-      "gridPos": {
-        "x": 0,
-        "y": 6,
-        "w": 24,
-        "h": 6
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "{unit=\"sshd.service\"} |= \"Failed\"",
+          "queryType": "range",
           "refId": "A"
         }
       ],
-      "options": {
-        "dedupStrategy": "none",
-        "showLabels": false,
-        "wrapLogMessage": true
-      }
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
     },
     {
       "id": 3,
       "title": "Auth Log",
       "type": "logs",
-      "gridPos": {
-        "x": 0,
-        "y": 12,
-        "w": 24,
-        "h": 8
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "{job=\"auth\"}",
+          "queryType": "range",
           "refId": "A"
         }
       ],
-      "options": {
-        "dedupStrategy": "none",
-        "showLabels": false,
-        "wrapLogMessage": true
-      }
+      "options": { "dedupStrategy": "none", "showLabels": false, "wrapLogMessage": true }
     },
     {
       "id": 4,
       "title": "Ban Rate (last 24h)",
       "type": "timeseries",
-      "gridPos": {
-        "x": 0,
-        "y": 20,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum(count_over_time({unit=\"fail2ban.service\"} |= \"Ban\" [5m]))",
+          "queryType": "range",
           "refId": "A",
           "legendFormat": "bans per 5m"
         }
@@ -113,19 +74,13 @@
       "id": 5,
       "title": "SSH Failure Rate (last 24h)",
       "type": "timeseries",
-      "gridPos": {
-        "x": 12,
-        "y": 20,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum(count_over_time({unit=\"sshd.service\"} |= \"Failed\" [5m]))",
+          "queryType": "range",
           "refId": "A",
           "legendFormat": "failures per 5m"
         }

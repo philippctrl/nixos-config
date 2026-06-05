@@ -26,6 +26,7 @@ in
     git
     vim
     htop
+    python3
   ];
 
   sops = {
