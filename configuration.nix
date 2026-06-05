@@ -118,15 +118,20 @@ networking.wireless = {
       datasources.settings.datasources = [
         {
           name = "Prometheus";
+          uid = "prometheus";
           type = "prometheus";
           url = "http://localhost:9090";
           isDefault = true;
+          orgId = 1;
+          editable = false;
         }
         {
           name = "Loki";
-          uid = "Loki";
+          uid = "loki";
           type = "loki";
           url = "http://localhost:3100";
+          orgId = 1;
+          editable = false;
         }
       ];
       dashboards.settings.providers = [
