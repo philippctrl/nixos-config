@@ -25,6 +25,7 @@ in
     iproute2
     git
     vim
+    htop
   ];
 
   sops = {
@@ -98,18 +99,10 @@ networking.wireless = {
       port = 9100;
       enabledCollectors = [ "systemd" ];
     };
-    exporters.fail2ban = {
-      enable = true;
-      port = 9191;
-    };
     scrapeConfigs = [
       {
         job_name = "node";
         static_configs = [{ targets = [ "localhost:9100" ]; }];
-      }
-      {
-        job_name = "fail2ban";
-        static_configs = [{ targets = [ "localhost:9191" ]; }];
       }
     ];
   };
@@ -141,8 +134,6 @@ networking.wireless = {
           options.path = pkgs.runCommand "grafana-dashboards" {} ''
             mkdir -p $out
             cp ${./grafana-dashboards/node-exporter-full.json} $out/node-exporter-full.json
-            cp ${./grafana-dashboards/fail2ban-logs.json} $out/fail2ban-logs.json
-            cp ${./grafana-dashboards/fail2ban-locations.json} $out/fail2ban-locations.json
           '';
         }
       ];
