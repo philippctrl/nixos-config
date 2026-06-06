@@ -10,7 +10,7 @@
       "id": 10,
       "title": "Successful SSH Logins (rate)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": {
         "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } },
@@ -30,7 +30,7 @@
       "id": 11,
       "title": "Successful SSH Logins (log)",
       "type": "logs",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -46,7 +46,7 @@
       "id": 1,
       "title": "SSH Connection Rate (all attempts)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -62,7 +62,7 @@
       "id": 2,
       "title": "Failed / Invalid Login Rate",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
       "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": {
         "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } },
@@ -82,7 +82,7 @@
       "id": 3,
       "title": "SSH — Failed & Invalid Logins",
       "type": "logs",
-      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 7 },
+      "gridPos": { "x": 0, "y": 18, "w": 24, "h": 7 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -98,7 +98,7 @@
       "id": 4,
       "title": "fail2ban — Bans",
       "type": "logs",
-      "gridPos": { "x": 0, "y": 19, "w": 24, "h": 7 },
+      "gridPos": { "x": 0, "y": 25, "w": 24, "h": 7 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -114,7 +114,7 @@
       "id": 5,
       "title": "SSH — All Authentication Activity",
       "type": "logs",
-      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 8 },
+      "gridPos": { "x": 0, "y": 32, "w": 24, "h": 8 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -130,7 +130,7 @@
       "id": 6,
       "title": "fail2ban — Service Activity",
       "type": "logs",
-      "gridPos": { "x": 0, "y": 34, "w": 24, "h": 7 },
+      "gridPos": { "x": 0, "y": 40, "w": 24, "h": 7 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
