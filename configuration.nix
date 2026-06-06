@@ -255,8 +255,33 @@ networking.wireless = {
         filter = "nginx-botsearch";
         maxretry = 2;
       };
+      # Catches port-22 probes that never reach auth: HTTP GETs at sshd,
+      # malformed banners, invalid protocol identifiers. The stock sshd
+      # filter only matches Failed-password/Invalid-user, so these slip
+      # past it. Two strikes is plenty — legitimate clients never trip
+      # this.
+      sshd-preauth.settings = {
+        enabled = true;
+        port = "ssh";
+        filter = "sshd-preauth";
+        backend = "systemd";
+        maxretry = 2;
+        findtime = "10m";
+        bantime = "24h";
+      };
     };
   };
+
+  # Custom filter file for sshd-preauth jail above.
+  environment.etc."fail2ban/filter.d/sshd-preauth.conf".text = ''
+    [Definition]
+    failregex = ^.*sshd.*: kex_exchange_identification: .* from <HOST>.*$
+                ^.*sshd.*: banner exchange: Connection from <HOST> port \d+: invalid format.*$
+                ^.*sshd.*: Bad protocol version identification .* from <HOST>.*$
+                ^.*sshd.*: Connection (closed|reset) by <HOST> port \d+ \[preauth\]$
+    ignoreregex =
+    journalmatch = _SYSTEMD_UNIT=sshd.service
+  '';
 
   # Log aggregation: ship systemd journal + auth logs into Loki for Grafana
   services.loki = {
