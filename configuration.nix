@@ -95,9 +95,11 @@ networking.wireless = {
   services.prometheus = {
     enable = true;
     port = 9090;
+    listenAddress = "127.0.0.1";
     exporters.node = {
       enable = true;
       port = 9100;
+      listenAddress = "127.0.0.1";
       enabledCollectors = [ "systemd" ];
     };
     scrapeConfigs = [
@@ -111,7 +113,7 @@ networking.wireless = {
   services.grafana = {
     enable = true;
     settings.server = {
-      http_addr = "0.0.0.0";
+      http_addr = "127.0.0.1";
       http_port = 3000;
     };
     provision = {
@@ -156,13 +158,18 @@ networking.wireless = {
 
   services.openssh = {
     enable = true;
-    settings.PasswordAuthentication = false; # TODO deactivate
+    settings.PasswordAuthentication = false;
+    # TODO: SECURITY — create a non-root wheel/sudo user with an SSH key, verify
+    # you can log in and sudo, THEN change this to "no" (or "prohibit-password").
+    # Direct root SSH on a public host is a major attack surface.
     settings.PermitRootLogin = "yes";
   };
 
   system.autoUpgrade = {
     enable = true;
     allowReboot = true;
+    dates = "04:00";
+    randomizedDelaySec = "30min";
   };
 
   # Automate Nix Store cleanup
@@ -176,6 +183,26 @@ networking.wireless = {
   virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;
+    # Default published container ports (-p) to loopback so they don't bypass
+    # the NixOS firewall and land on the public interface. Use -p 127.0.0.1:X:Y
+    # is then the default behaviour; expose deliberately via a reverse proxy.
+    daemon.settings.ip = "127.0.0.1";
+  };
+
+  # Public-facing web server — default landing page so the open 80/443 ports
+  # (and the fail2ban nginx jails) reference a real, log-producing service.
+  services.nginx = {
+    enable = true;
+    recommendedOptimisation = true;
+    recommendedGzipSettings = true;
+    recommendedTlsSettings = true;
+    virtualHosts."_" = {
+      default = true;
+      locations."/".extraConfig = ''
+        default_type text/html;
+        return 200 '<!DOCTYPE html><html><head><title>Welcome to nginx!</title></head><body><h1>Welcome to nginx!</h1><p>If you can read this, the web server is running.</p></body></html>';
+      '';
+    };
   };
 			
   services.logind.lidSwitch = "ignore";
@@ -190,7 +217,6 @@ networking.wireless = {
     "-w /etc/passwd -p wa -k identity"              # user account changes
     "-w /etc/shadow -p wa -k identity"
     "-w /etc/sudoers -p wa -k sudoers"
-    "-w /var/log/auth.log -p wa -k auth_log"
     "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
   ];
 
@@ -210,8 +236,12 @@ networking.wireless = {
         enabled = true;
         port = "ssh";
         filter = "sshd";
+        # "aggressive" also catches pubkey-only probes / preauth disconnects,
+        # which "normal" mode misses when PasswordAuthentication is off.
+        mode = "aggressive";
         maxretry = 3;
-        bantime = "2h";
+        findtime = "10m";
+        bantime = "4h";
       };
       nginx-http-auth.settings = {
         enabled = true;
@@ -267,10 +297,14 @@ networking.wireless = {
       limits_config = {
         reject_old_samples = true;
         reject_old_samples_max_age = "168h";
+        retention_period = "720h"; # keep logs 30 days, then delete
       };
       compactor = {
         working_directory = "/var/lib/loki/compactor";
         compaction_interval = "10m";
+        retention_enabled = true;
+        retention_delete_delay = "2h";
+        delete_request_store = "filesystem"; # required by Loki 3.x when retention is on
       };
     };
   };
@@ -327,6 +361,41 @@ networking.wireless = {
           ];
         }
       ];
+    };
+  };
+
+  # Alert on every successful SSH login via a Slack/Mattermost-compatible
+  # webhook. For Discord, append "/slack" to the webhook URL.
+  # Put the URL in secrets/secrets.yaml under key: ssh_alert_webhook
+  sops.secrets.ssh_alert_webhook = {
+    restartUnits = [ "ssh-login-notify.service" ];
+  };
+
+  systemd.services.ssh-login-notify = {
+    description = "Alert on successful SSH logins";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Restart = "always";
+      RestartSec = "5s";
+      ExecStart = pkgs.writeShellScript "ssh-login-notify" ''
+        set -u
+        webhook="$(cat /run/secrets/ssh_alert_webhook 2>/dev/null || true)"
+        ${pkgs.systemd}/bin/journalctl -f -n0 -o cat -u sshd.service | while IFS= read -r line; do
+          case "$line" in
+            *"Accepted "*)
+              user="$(printf '%s' "$line" | ${pkgs.gnused}/bin/sed -n 's/.*Accepted [^ ]* for \([^ ]*\) from \([0-9a-fA-F:.]*\) port.*/\1/p')"
+              ip="$(printf '%s' "$line" | ${pkgs.gnused}/bin/sed -n 's/.*Accepted [^ ]* for \([^ ]*\) from \([0-9a-fA-F:.]*\) port.*/\2/p')"
+              [ -z "$user" ] && user="?"
+              [ -z "$ip" ] && ip="?"
+              [ -z "$webhook" ] && continue
+              payload="$(printf '{"text":"🔓 SSH login on andromeda: %s@%s"}' "$user" "$ip")"
+              ${pkgs.curl}/bin/curl -s -m 10 -H 'Content-Type: application/json' -d "$payload" "$webhook" >/dev/null || true
+              ;;
+          esac
+        done
+      '';
     };
   };
 
@@ -405,7 +474,10 @@ networking.wireless = {
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
-   networking.firewall.allowedTCPPorts = [ 22 80 443 3000 9090 9100 ];
+   # 3000/9090/9100 deliberately NOT exposed — Grafana/Prometheus/node_exporter
+   # bind to localhost; reach Grafana via SSH tunnel:
+   #   ssh -L 3000:localhost:3000 root@192.168.2.185
+   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
