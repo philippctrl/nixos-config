@@ -190,6 +190,11 @@ networking.wireless = {
     daemon.settings.ip = "127.0.0.1";
   };
 
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "admin@daem0n1337.ddns.net";
+  };
+
   # Public-facing web server — default landing page so the open 80/443 ports
   # (and the fail2ban nginx jails) reference a real, log-producing service.
   services.nginx = {
@@ -197,8 +202,10 @@ networking.wireless = {
     recommendedOptimisation = true;
     recommendedGzipSettings = true;
     recommendedTlsSettings = true;
-    virtualHosts."_" = {
+    virtualHosts."daem0n1337.ddns.net" = {
       default = true;
+      enableACME = true;  # auto-request and renew Let's Encrypt cert
+      forceSSL = true;    # redirect HTTP → HTTPS
       locations."/".extraConfig = ''
         default_type text/html;
         return 200 '<!DOCTYPE html><html><head><title>Welcome to nginx!</title></head><body><h1>Welcome to nginx!</h1><p>If you can read this, the web server is running.</p></body></html>';
