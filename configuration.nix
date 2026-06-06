@@ -208,6 +208,16 @@ networking.wireless = {
 			
   services.logind.lidSwitch = "ignore";
 # -----------------------------------------------------------------------------
+# kernel hardening
+
+  boot.kernel.sysctl = {
+    "net.ipv4.tcp_syncookies" = 1;     # SYN flood protection
+    "net.ipv4.conf.all.rp_filter" = 1; # anti-spoofing (drop packets with impossible source routes)
+    "kernel.dmesg_restrict" = 1;       # hide dmesg from non-root
+    "kernel.kptr_restrict" = 2;        # hide kernel pointers from /proc
+  };
+
+# -----------------------------------------------------------------------------
 # security
 
   # Kernel-level audit trail: exec, privilege escalation, sensitive file writes
