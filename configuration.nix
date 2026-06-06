@@ -182,6 +182,7 @@ networking.wireless = {
   # Docker
   virtualisation.docker = {
     enable = true;
+    package = pkgs.docker_29;
     autoPrune.enable = true;
     # Default published container ports (-p) to loopback so they don't bypass
     # the NixOS firewall and land on the public interface. Use -p 127.0.0.1:X:Y
