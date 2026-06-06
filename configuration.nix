@@ -410,7 +410,7 @@ networking.wireless = {
         webhook="$(cat /run/secrets/ssh_alert_webhook 2>/dev/null || true)"
         ${pkgs.systemd}/bin/journalctl -f -n0 -o cat -u sshd.service | while IFS= read -r line; do
           case "$line" in
-            *"Accepted "*)
+            *"Accepted publickey for "*|*"Accepted password for "*|*"Accepted keyboard-interactive/pam for "*)
               user="$(printf '%s' "$line" | ${pkgs.gnused}/bin/sed -n 's/.*Accepted [^ ]* for \([^ ]*\) from \([0-9a-fA-F:.]*\) port.*/\1/p')"
               ip="$(printf '%s' "$line" | ${pkgs.gnused}/bin/sed -n 's/.*Accepted [^ ]* for \([^ ]*\) from \([0-9a-fA-F:.]*\) port.*/\2/p')"
               [ -z "$user" ] && user="?"
