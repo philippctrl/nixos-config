@@ -214,6 +214,10 @@ networking.wireless = {
   };
 			
   services.logind.lidSwitch = "ignore";
+
+  # Allows pre-built binaries (e.g. VS Code Remote's bundled node) to run on
+  # NixOS by shimming the missing /lib64/ld-linux-x86-64.so.2 interpreter path.
+  programs.nix-ld.enable = true;
 # -----------------------------------------------------------------------------
 # kernel hardening
 
