@@ -9,7 +9,7 @@ let
     url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
     # Pin the hash to avoid silent updates — get it by running:
     # nix-prefetch-url --unpack https://github.com/Mic92/sops-nix/archive/master.tar.gz
-    sha256 = "0zxy0kfhhi0dq5jz0gkx9lb3m02a1gzkm86dvsga614kbair3wam";
+    sha256 = "0jm1xzqp508avayvnx2q7qiw7wj1kqz6m2g1vr0i1vj03qvhmbqs";
   };
 in
 {
