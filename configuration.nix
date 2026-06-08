@@ -202,6 +202,15 @@ networking.wireless = {
     recommendedOptimisation = true;
     recommendedGzipSettings = true;
     recommendedTlsSettings = true;
+
+    # Define rate-limit zones in the http{} context.
+    # "binary_remote_addr" uses 4 bytes per IP (vs 7–15 for text) — more efficient.
+    # 10m zone holds ~160 000 IPs; rate = sustained req/s per IP.
+    commonHttpConfig = ''
+      limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+      limit_req_status 429;  # return 429 Too Many Requests instead of default 503
+    '';
+
     virtualHosts."daem0n1337.ddns.net" = {
       default = true;
       enableACME = true;  # auto-request and renew Let's Encrypt cert
@@ -210,6 +219,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8080";
         proxyWebsockets = true;  # needed if the app uses WebSockets
         extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
