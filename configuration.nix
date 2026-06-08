@@ -206,10 +206,16 @@ networking.wireless = {
       default = true;
       enableACME = true;  # auto-request and renew Let's Encrypt cert
       forceSSL = true;    # redirect HTTP → HTTPS
-      locations."/".extraConfig = ''
-        default_type text/html;
-        return 200 '<!DOCTYPE html><html><head><title>Welcome to nginx!</title></head><body><h1>Welcome to nginx!</h1><p>If you can read this, the web server is running.</p></body></html>';
-      '';
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8080";
+        proxyWebsockets = true;  # needed if the app uses WebSockets
+        extraConfig = ''
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
     };
   };
 			
@@ -355,6 +361,20 @@ networking.wireless = {
       };
     };
   };
+
+  sops.secrets.sun_password = {
+    neededForUsers = true; # must be decrypted before user accounts are applied
+  };
+
+  users.users.sun = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "docker" ]; # wheel = sudo; docker = manage containers
+    hashedPasswordFile = config.sops.secrets.sun_password.path;
+  };
+
+  # Allow wheel users to sudo without a password — remove this line if you'd
+  # rather be prompted for the password each time.
+  security.sudo.wheelNeedsPassword = false;
 
   # Allow promtail to read the systemd journal
   users.users.promtail = {
