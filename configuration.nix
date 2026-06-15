@@ -11,6 +11,14 @@ let
     # nix-prefetch-url --unpack https://github.com/Mic92/sops-nix/archive/master.tar.gz
     sha256 = "0jm1xzqp508avayvnx2q7qiw7wj1kqz6m2g1vr0i1vj03qvhmbqs";
   };
+
+  # Self-signed cert so nginx can complete the TLS handshake on direct-IP HTTPS
+  # connections and issue a 301 redirect to philippwieck.com.
+  selfSignedCert = pkgs.runCommand "self-signed-cert" { buildInputs = [ pkgs.openssl ]; } ''
+    mkdir -p $out
+    openssl req -x509 -newkey rsa:2048 -keyout $out/key.pem -out $out/cert.pem \
+      -days 3650 -nodes -subj "/CN=localhost"
+  '';
 in
 {
 
@@ -213,6 +221,9 @@ networking.wireless = {
 
     virtualHosts."_" = {
       default = true;
+      addSSL = true;
+      sslCertificate = "${selfSignedCert}/cert.pem";
+      sslCertificateKey = "${selfSignedCert}/key.pem";
       locations."/" = {
         extraConfig = ''
           return 301 https://philippwieck.com$request_uri;
