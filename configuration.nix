@@ -192,7 +192,7 @@ networking.wireless = {
 
   security.acme = {
     acceptTerms = true;
-    defaults.email = "admin@daem0n1337.ddns.net";
+    defaults.email = "admin@philippwieck.com";
   };
 
   # Public-facing web server — default landing page so the open 80/443 ports
@@ -213,11 +213,59 @@ networking.wireless = {
 
     virtualHosts."daem0n1337.ddns.net" = {
       default = true;
-      enableACME = true;  # auto-request and renew Let's Encrypt cert
-      forceSSL = true;    # redirect HTTP → HTTPS
+      enableACME = true;
+      forceSSL = true;
       locations."/" = {
         proxyPass = "http://127.0.0.1:8080";
-        proxyWebsockets = true;  # needed if the app uses WebSockets
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
+
+    virtualHosts."philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:5000";
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
+
+    virtualHosts."status.philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:5001";
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
+
+    virtualHosts."argos.philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:5002";
+        proxyWebsockets = true;
         extraConfig = ''
           limit_req zone=general burst=20 nodelay;
           proxy_set_header Host $host;
@@ -444,6 +492,24 @@ networking.wireless = {
   # Alert on every successful SSH login via a Slack/Mattermost-compatible
   # webhook. For Discord, append "/slack" to the webhook URL.
   # Put the URL in secrets/secrets.yaml under key: ssh_alert_webhook
+  sops.secrets.cloudflare_api_token = {};
+
+  services.ddclient = {
+    enable = true;
+    protocol = "cloudflare";
+    zone = "philippwieck.com";
+    username = "token";
+    passwordFile = config.sops.secrets.cloudflare_api_token.path;
+    domains = [
+      "philippwieck.com"
+      "argos.philippwieck.com"
+      "status.philippwieck.com"
+    ];
+    use = "web, web=https://ipv4.icanhazip.com/";
+    interval = "5min";
+    quiet = true;
+  };
+
   sops.secrets.ssh_alert_webhook = {
     restartUnits = [ "ssh-login-notify.service" ];
   };
