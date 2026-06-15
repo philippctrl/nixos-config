@@ -211,8 +211,16 @@ networking.wireless = {
       limit_req_status 429;  # return 429 Too Many Requests instead of default 503
     '';
 
-    virtualHosts."daem0n1337.ddns.net" = {
+    virtualHosts."_" = {
       default = true;
+      locations."/" = {
+        extraConfig = ''
+          return 301 https://philippwieck.com$request_uri;
+        '';
+      };
+    };
+
+    virtualHosts."daem0n1337.ddns.net" = {
       enableACME = true;
       forceSSL = true;
       locations."/" = {
