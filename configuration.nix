@@ -35,7 +35,7 @@ in
     vim
     htop
     python3
-    sensors
+    lm_sensors
   ];
 
   sops = {
