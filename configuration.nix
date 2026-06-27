@@ -9,7 +9,7 @@ let
     url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
     # Pin the hash to avoid silent updates — get it by running:
     # nix-prefetch-url --unpack https://github.com/Mic92/sops-nix/archive/master.tar.gz
-    sha256 = "0jm1xzqp508avayvnx2q7qiw7wj1kqz6m2g1vr0i1vj03qvhmbqs";
+    sha256 = "1f0j45mxb2zv672icpfvi7vnz8l4ccgxlkg79jca8avg00lj9gz3";
   };
 
   # Self-signed cert so nginx can complete the TLS handshake on direct-IP HTTPS
