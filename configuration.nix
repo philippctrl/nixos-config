@@ -168,10 +168,7 @@ networking.wireless = {
   services.openssh = {
     enable = true;
     settings.PasswordAuthentication = false;
-    # TODO: SECURITY — create a non-root wheel/sudo user with an SSH key, verify
-    # you can log in and sudo, THEN change this to "no" (or "prohibit-password").
-    # Direct root SSH on a public host is a major attack surface.
-    settings.PermitRootLogin = "yes";
+    settings.PermitRootLogin = "no";
   };
 
   system.autoUpgrade = {
@@ -448,6 +445,13 @@ networking.wireless = {
     isNormalUser = true;
     extraGroups = [ "wheel" "docker" ]; # wheel = sudo; docker = manage containers
     hashedPasswordFile = config.sops.secrets.sun_password.path;
+    openssh.authorizedKeys.keys = [
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1EIT7ucz9K3Aj/dDZ4gIzW9tQJLVwN474+KjZNxANlwFydLnVvF4A+MQxDSqYiqRqlxIgQnYB19cGz89FX6+d5kzdg94ZHzAhI02DvajJWh0hX/wKz0mHpbt5I28VPsocyZIZs1LRmWNC5SSDvu4E+5WXHTR2yJA/TNthj9k1w48Q8xvN7e87GNux34Smwy+q98/HeX5VnIUByTDlfI7emeaEuzht0S4YAFyQHmXvqAJrRCEIK9VLBzW3B1eUrDXoxMJXMhOtqG7CY2IE/To4e++BS/9wgB8hOdUGhbIP4kgy8I6Q3d0dbx8Wsni6dgs7RFPon5lcpphepwJa9/oLDcpBKFjemk5+6T5GXINTidOCaaA/L19GiWPCJ/Zk0YS0igLTXbs8twcLMKOyjTjojx92vObuODkc58MX6ony2MKtfh6TWerlwClhXRFOeZjorp2OpgAtp8W1N0S2oImQzNT6t0wOA1mCDkGYl9wO1DPjRVFLmHBNmat7fkcAcyQZtQ1dEkRsawux6+8masyiekfUOEMTBdXCu+c+QoDJxLNyVz/2JF9ov9g4xmBLMbO5CY766KVGa1JoQit9MKIY4Dqu3QnSMT751TSF+xhMbVhKwSulumX26HSiIf6NoAanXEDfpkDMEKQMjGNthzrN7tHqTJYBVfiZhqnqWVJ2mQ=="
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC19EvoCyit8wUGu4jpuu5pvzuSJy2VC1a+UQOuXTolX6+1QMenIuWSbfwVD2WWMkjD/hrmOsUO4yH8vpg/RJVPh4qoNgWCgGbAAjL4X9UdnCq46Q4o88U00cRnWYOJTZZ8Qs0PMttGPSVQAw3iHHc/54bw62drgE3rlbhDYwYIsIIQuXAH4hItjBggtjLWiwyNHNSMm8zcnpmkEVBKld2lh9p0wZ5ViwkkrtB+yDrXDH+r5j2RVmWKVufu8hlfZ2QTvG8VtJtYKgBjA3rfn+OTcHwzU0P6r5UpxUtMTuM3VGx1mGSgabElUQVrIrQjO3Fduess0RbPIQiq6oAC8oGfjPPzm1VkRR2GsFVRnMnnl9iHJ/5zl4g6r5dx0yKfw2arnEZjbLXduELXSC+8ZwyviHN2C4jCpaoWy16BAneljOMgZPUnc62SpTDTDScWU0JMImk7LKexk0tMUFVsBpU2rufVhNbBb86OKpDJH6cLZqyZAVcr9u6/6Goy3O6cQ9yhbCHty1wq9NBwOACv+s0XI2tDdMZ9t+aChVWSzlulQ5StWDxOTAf2uQcfdl6std3MhPntJth3P+wSJyyR6N1Q1uPFrDb0Tbd5cBZqLc6H+vWPIReBalEB9Hsq8qQEG9Se+M6F/9/E5b8WLEwLwU7Lln/gtVmxnRAQPtiEfboaAw=="
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCXL9bRVNAn3pJc3zu+HImMWofAZukF3fVi5i+AtRY0g/Yye9RazWPQmrvzVwBpaqLM/1Y71GZESc1KlfKuhebRcT3HFtnf9OMYrXpHFaPkKkH56aD1aB+mDYZSzKsG/hr3/ExdTKZq2ICksjYVrpe1DxtEjpNZHBAkY9IpFvl4Vjt8qT4pCiDpNWz/w0qlA/V2V1DYj+hgcOTaJt+FdKZUvVxCbmDEICqYFn1WHCNIgYzsl0yHJxIMYb7k60agJmxY8VjLradOb+gffj24IbMeA+0V1Lbw31BAEE7QkUNzh+e1nluqeojRXPFsTmfYDDiwZ4V3sK/lLy2j+7/OgIiLwOLldwPZUeBg+CobYTPfWkvz3gN24W58SAxbOPSRiw5REwOCYBtkqo1kfje31ROgG5dr99zvA7nWyt9NLt6LmXIBuXBGrLd00CU5NJh1/c3y3MxT8bQEXYuO3NMiU0w59j7/E2Vc8uqbh++AEjWPWSUj36T87IPpNC8e1HeP/D8gUZMNN09ElMitnjvMxy9kqrMl2WN8NU1vByPZZVCO2TZ/ijAW/kh1tM5JI6SzLeTaLiPrQyn9Pr8nmNUFH0s9BZs48M6XDTmgrCFLz46CgK2bLFA6kGi+cdgqoQQJYh0NrRuWiw9icuWF0lcPPLKrtBUeNMh3rGJCvZI8as7Sow=="
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCfBsDiFnMOtjDhDuYPDseIQLJzaKA3ZUG0DzhQHzgnxVNBrWU2PKoEh5WjVeptmVv41xAbhcIqIKVzBXFsWlcLXQuwQpiXC4M1osgBlX3zv3KXUumM8tuFvHCLR1DG8RdoKBOjCyI7AJoYl0rES4C32RAS3usHGK+baOlUp6Ad/acUPyMeJhL2RA6om4LCtwPQqBfhoVAMWhkqDBWAmHIe7b0LvDIHIM7yhQvhqXVaLCCPMZtcUFiq5BOloVBzgjz1jOIbG8vv+Wrgo58FzOk2uc66t9SGHgDI9xmo6cuBHCHDlHr+KS0f9A4AVi6zokLefxkUn6t0zKKgR6Q7puEAfCW5vO2CE/oxZq9dj/rrN2OOCqNwzXAU2/5LgntyVrjmlp50VLU+/TghjMIEmUjarg46TWPxhO75GsyARyY9fOD+/z0RKzlvsEt2KJtoTXDMA0B8rHMVA7JN+hsXENwBtbXIVv1Wjw2dwl8LGOe+lgX3kAcvGLP1rNdDd5UNdkw3hdu9EdSW/tUR2ygiXNLoN8t6LoZBbzRrSCe19UaFo97gnWP48Vroe+HJ2kloDLAIOOPv6MvbZ/gxQRdZSHZd3byLF6uiYwpnloKt/yWXYEwY33vrbRyAFFDsYi4Xzsz5/TtFWfAavwHUnSte9GzowjqzuAHFq8LI6tAD/fWMuQ=="
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBHq1vZR6w8Cz1oYPfajfaYUOhmJM65aYAqn4WLXyjHS u0_a271@localhost"
+    ];
   };
 
   # Allow wheel users to sudo without a password — remove this line if you'd
