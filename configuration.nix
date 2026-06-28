@@ -367,7 +367,7 @@ networking.wireless = {
         port = "ssh";
         filter = "sshd-preauth";
         backend = "systemd";
-        maxretry = 2;
+        maxretry = 3;
         findtime = "10m";
         bantime = "24h";
       };
