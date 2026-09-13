@@ -307,6 +307,8 @@ networking.wireless = {
     "net.ipv4.conf.all.rp_filter" = 1; # anti-spoofing (drop packets with impossible source routes)
     "kernel.dmesg_restrict" = 1;       # hide dmesg from non-root
     "kernel.kptr_restrict" = 2;        # hide kernel pointers from /proc
+    "fs.inotify.max_user_instances" = 4096;
+    "fs.inotify.max_user_watches" = 524288;
   };
 
 # -----------------------------------------------------------------------------
