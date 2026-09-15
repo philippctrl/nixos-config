@@ -292,8 +292,48 @@ networking.wireless = {
         '';
       };
     };
+
+    virtualHosts."prophet.philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      basicAuthFile = config.sops.secrets.prophet_htpasswd.path;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8001";
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
+
+    virtualHosts."editor.prophet.philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      basicAuthFile = config.sops.secrets.prophet_htpasswd.path;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8002";
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
   };
-			
+
+  # htpasswd lines for prophet + editor basic auth (kept out of the Nix store)
+  sops.secrets.prophet_htpasswd = {
+    owner = "nginx";
+    restartUnits = [ "nginx.service" ];
+  };
+
   services.logind.lidSwitch = "ignore";
 
   # Allows pre-built binaries (e.g. VS Code Remote's bundled node) to run on
@@ -530,6 +570,8 @@ networking.wireless = {
       "philippwieck.com"
       "argos.philippwieck.com"
       "status.philippwieck.com"
+      "prophet.philippwieck.com"
+      "editor.prophet.philippwieck.com"
     ];
     use = "web, web=https://ipv4.icanhazip.com/";
     interval = "5min";
