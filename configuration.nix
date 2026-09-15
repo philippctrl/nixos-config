@@ -215,7 +215,7 @@ networking.wireless = {
     commonHttpConfig = ''
       limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
       # Separate, looser bucket for prophet + editor (asset-heavy, many API calls)
-      limit_req_zone $binary_remote_addr zone=prophet:10m rate=30r/s;
+      limit_req_zone $binary_remote_addr zone=prophet:10m rate=100r/s;
       limit_req_status 429;  # return 429 Too Many Requests instead of default 503
     '';
 
