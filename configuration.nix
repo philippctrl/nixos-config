@@ -214,6 +214,8 @@ networking.wireless = {
     # 10m zone holds ~160 000 IPs; rate = sustained req/s per IP.
     commonHttpConfig = ''
       limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+      # Separate, looser bucket for prophet + editor (asset-heavy, many API calls)
+      limit_req_zone $binary_remote_addr zone=prophet:10m rate=30r/s;
       limit_req_status 429;  # return 429 Too Many Requests instead of default 503
     '';
 
@@ -301,7 +303,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8001";
         proxyWebsockets = true;
         extraConfig = ''
-          limit_req zone=general burst=20 nodelay;
+          limit_req zone=prophet burst=100 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -318,7 +320,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8002";
         proxyWebsockets = true;
         extraConfig = ''
-          limit_req zone=general burst=20 nodelay;
+          limit_req zone=prophet burst=100 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
