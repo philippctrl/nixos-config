@@ -127,6 +127,9 @@ networking.wireless = {
       http_addr = "127.0.0.1";
       http_port = 3000;
     };
+    # Pre-26.05 default key, kept so existing encrypted DB entries stay readable.
+    # Grafana only listens on localhost, so a public key is acceptable here.
+    settings.security.secret_key = "SW2YcwTIb9zpOOhoPsMm";
     provision = {
       enable = true;
       datasources.settings = {
@@ -520,60 +523,43 @@ networking.wireless = {
   # rather be prompted for the password each time.
   security.sudo.wheelNeedsPassword = false;
 
-  # Allow promtail to read the systemd journal
-  users.users.promtail = {
-    isSystemUser = true;
-    group = "promtail";
-    extraGroups = [ "systemd-journal" ];
-  };
-  users.groups.promtail = {};
+  # Ship the systemd journal into Loki (replaces promtail, removed in 26.05).
+  # Alloy loads every *.alloy file in /etc/alloy; its UI listens on 127.0.0.1:12345.
+  services.alloy.enable = true;
+  # Allow alloy to read the systemd journal
+  systemd.services.alloy.serviceConfig.SupplementaryGroups = [ "systemd-journal" ];
 
-  systemd.services.promtail.serviceConfig = {
-    DynamicUser = lib.mkForce false;
-    User = "promtail";
-    Group = "promtail";
-    StateDirectory = "promtail";
-    ReadWritePaths = [ "/var/lib/promtail" ];
-    ExecStartPre = lib.mkForce "";
-  };
+  environment.etc."alloy/config.alloy".text = ''
+    loki.relabel "journal" {
+      forward_to = []
 
-  services.promtail = {
-    enable = true;
-    configuration = {
-      server = {
-        http_listen_port = 9080;
-        grpc_listen_port = 0;
-      };
-      positions.filename = "/var/lib/promtail/positions.yaml";
-      clients = [{ url = "http://localhost:3100/loki/api/v1/push"; }];
-      scrape_configs = [
-        {
-          job_name = "journal";
-          journal = {
-            max_age = "12h";
-            labels = {
-              job = "systemd-journal";
-              host = "andromeda";
-            };
-          };
-          relabel_configs = [
-            {
-              source_labels = [ "__journal__systemd_unit" ];
-              target_label = "unit";
-            }
-            {
-              source_labels = [ "__journal__hostname" ];
-              target_label = "hostname";
-            }
-            {
-              source_labels = [ "__journal_priority_keyword" ];
-              target_label = "level";
-            }
-          ];
-        }
-      ];
-    };
-  };
+      rule {
+        source_labels = ["__journal__systemd_unit"]
+        target_label  = "unit"
+      }
+      rule {
+        source_labels = ["__journal__hostname"]
+        target_label  = "hostname"
+      }
+      rule {
+        source_labels = ["__journal_priority_keyword"]
+        target_label  = "level"
+      }
+    }
+
+    loki.source.journal "journal" {
+      max_age       = "12h"
+      relabel_rules = loki.relabel.journal.rules
+      labels        = { job = "systemd-journal", host = "andromeda" }
+      forward_to    = [loki.write.local.receiver]
+    }
+
+    loki.write "local" {
+      endpoint {
+        url = "http://localhost:3100/loki/api/v1/push"
+      }
+    }
+  '';
 
   # Alert on every successful SSH login via a Slack/Mattermost-compatible
   # webhook. For Discord, append "/slack" to the webhook URL.
