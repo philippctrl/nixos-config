@@ -9,7 +9,7 @@ let
     url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
     # Pin the hash to avoid silent updates — get it by running:
     # nix-prefetch-url --unpack https://github.com/Mic92/sops-nix/archive/master.tar.gz
-    sha256 = "1b6qa0qgyfnz76llc7xpnxhxyvnn7v9hgm1kb1bjq9bldwyqqsz0";
+    sha256 = "0q1f16l51z2v9pk05ma6xdsjq5gzdx21nk72nsmxdvkj7bghgb0q";
   };
 
   # Self-signed cert so nginx can complete the TLS handshake on direct-IP HTTPS
@@ -367,6 +367,11 @@ networking.wireless = {
     "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
   ];
 
+  security.audit.settings = {
+    max_log_file = 50;          # Size limit per file in MB
+    max_log_file_action = "ROTATE";
+    num_logs = 5;                # Keep at most 5 rotated files
+  };
   services.fail2ban = {
     enable = true;
     maxretry = 5;
