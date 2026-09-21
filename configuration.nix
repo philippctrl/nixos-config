@@ -50,7 +50,7 @@ in
 sops.secrets.wpa_supplicant = {
   sopsFile = ./secrets/wpa_supplicant.conf;
   format = "binary";
-  path = "/etc/wpa_supplicant.conf";
+  owner = "wpa_supplicant"; # the daemon runs unprivileged since 26.05
   restartUnits = [ "wpa_supplicant-wlp0s20f3.service" ];
 };
 
@@ -91,7 +91,10 @@ networking = {
 networking.wireless = {
   enable = true;
   interfaces = [ "wlp0s20f3" ];
-  # no secretsFile, no networks block — config comes entirely from the secret
+  # No networks block: the networks come from the sops secret, loaded as an
+  # extra config file (-I). Since 26.05 /etc/wpa_supplicant.conf is ignored,
+  # and extraConfigFiles are bind-mounted into the service's sandbox.
+  extraConfigFiles = [ config.sops.secrets.wpa_supplicant.path ];
 };
 
 
