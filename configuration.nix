@@ -366,11 +366,11 @@ networking.wireless = {
     "-w /etc/sudoers -p wa -k sudoers"
     "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
   ];
-  services.auditd.settings = {
-    max_log_file = 50;
-    max_log_file_action = "ROTATE";
-    num_logs = 5;
-  };
+  security.audit.extraConfigFile = ''
+    max_log_file = 50
+    max_log_file_action = ROTATE
+    num_logs = 5
+  '';
 
   services.fail2ban = {
     enable = true;
