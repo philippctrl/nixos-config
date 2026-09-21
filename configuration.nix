@@ -6,10 +6,12 @@
 
 let
   sops-nix = builtins.fetchTarball {
-    url = "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-    # Pin the hash to avoid silent updates — get it by running:
-    # nix-prefetch-url --unpack https://github.com/Mic92/sops-nix/archive/master.tar.gz
-    sha256 = "0q1f16l51z2v9pk05ma6xdsjq5gzdx21nk72nsmxdvkj7bghgb0q";
+    # Pinned to the last commit before sops-nix required go 1.26 (nixos-25.11 ships go 1.25).
+    # Bump only together with a nixpkgs release that has a new enough go.
+    url = "https://github.com/Mic92/sops-nix/archive/13616fff713a9f94055c66f15687ebdc17a335df.tar.gz";
+    # Get the hash by running:
+    # nix-prefetch-url --unpack <url above>
+    sha256 = "1b6qa0qgyfnz76llc7xpnxhxyvnn7v9hgm1kb1bjq9bldwyqqsz0";
   };
 
   # Self-signed cert so nginx can complete the TLS handshake on direct-IP HTTPS
