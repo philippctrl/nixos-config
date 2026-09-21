@@ -338,7 +338,7 @@ networking.wireless = {
     restartUnits = [ "nginx.service" ];
   };
 
-  services.logind.lidSwitch = "ignore";
+  services.logind.settings.Login.HandleLidSwitch = "ignore";
 
   # Allows pre-built binaries (e.g. VS Code Remote's bundled node) to run on
   # NixOS by shimming the missing /lib64/ld-linux-x86-64.so.2 interpreter path.
@@ -592,7 +592,8 @@ networking.wireless = {
       "prophet.philippwieck.com"
       "editor.prophet.philippwieck.com"
     ];
-    use = "web, web=https://ipv4.icanhazip.com/";
+    usev4 = "webv4, webv4=https://ipv4.icanhazip.com/";
+    usev6 = ""; # IPv4 only (the default would also push AAAA records)
     interval = "5min";
     quiet = true;
   };
