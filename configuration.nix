@@ -175,6 +175,7 @@ networking.wireless = {
 
   system.autoUpgrade = {
     enable = true;
+    channel = "https://nixos.org/channels/nixos-26.05";
     allowReboot = true;
     dates = "04:00";
     randomizedDelaySec = "30min";
