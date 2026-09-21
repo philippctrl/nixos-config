@@ -367,11 +367,12 @@ networking.wireless = {
     "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
   ];
 
-  security.audit.settings = {
-    max_log_file = 50;          # Size limit per file in MB
-    max_log_file_action = "ROTATE";
-    num_logs = 5;                # Keep at most 5 rotated files
-  };
+  security.auditd.extraConfigFile = ''
+    max_log_file = 50
+    max_log_file_action = ROTATE
+    num_logs = 5
+  '';
+
   services.fail2ban = {
     enable = true;
     maxretry = 5;
