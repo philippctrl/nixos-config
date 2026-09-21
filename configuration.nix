@@ -360,16 +360,26 @@ networking.wireless = {
   security.auditd.enable = true;
   security.audit.enable = true;
   security.audit.rules = [
-    "-a exit,always -F arch=b64 -S execve"         # all command execution
+    "-a exit,always -F arch=b64 -S execve -F auid>=1000 -F auid!=unset -k exec" # commands run by logged-in users
     "-w /etc/passwd -p wa -k identity"              # user account changes
     "-w /etc/shadow -p wa -k identity"
     "-w /etc/sudoers -p wa -k sudoers"
-    "-a exit,always -F arch=b64 -S open,openat -F dir=/etc -F success=1 -k etc_access"
+    "-w /etc -p wa -k etc_write"                    # writes/attribute changes under /etc
   ];
-  security.audit.extraConfigFile = ''
-    max_log_file = 50
-    max_log_file_action = ROTATE
-    num_logs = 5
+  # auditd.conf: cap audit logs at ~250 MB (5 x 50 MB, rotated)
+  security.auditd.settings = {
+    max_log_file = 50;
+    max_log_file_action = "rotate";
+    num_logs = 5;
+    space_left = "10%";
+    space_left_action = "syslog";
+    admin_space_left = "5%";
+    admin_space_left_action = "suspend";
+  };
+
+  # Cap the systemd journal
+  services.journald.extraConfig = ''
+    SystemMaxUse=1G
   '';
 
   services.fail2ban = {
