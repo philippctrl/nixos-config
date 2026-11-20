@@ -345,6 +345,21 @@ networking.wireless = {
     restartUnits = [ "nginx.service" ];
   };
 
+  # Egress lockdown for nginx: it only ever talks to upstreams on 127.0.0.1, so
+  # refuse any NEW outbound connection from the nginx user to a non-loopback
+  # interface. An exploited worker then can't open a reverse shell or download a
+  # second-stage payload. Replies to inbound clients are ESTABLISHED, not NEW, so
+  # serving the sites is unaffected. (systemd's IPAddressDeny can't be used here:
+  # it filters inbound client traffic too.)
+  # Delete-then-insert keeps the rule from piling up on firewall reloads.
+  networking.firewall.extraCommands = ''
+    ip46tables -D OUTPUT ! -o lo -m owner --uid-owner nginx -m conntrack --ctstate NEW -j REJECT 2>/dev/null || true
+    ip46tables -I OUTPUT ! -o lo -m owner --uid-owner nginx -m conntrack --ctstate NEW -j REJECT
+  '';
+  networking.firewall.extraStopCommands = ''
+    ip46tables -D OUTPUT ! -o lo -m owner --uid-owner nginx -m conntrack --ctstate NEW -j REJECT 2>/dev/null || true
+  '';
+
   services.logind.settings.Login.HandleLidSwitch = "ignore";
 
   # Allows pre-built binaries (e.g. VS Code Remote's bundled node) to run on
@@ -522,9 +537,10 @@ networking.wireless = {
     ];
   };
 
-  # Allow wheel users to sudo without a password — remove this line if you'd
-  # rather be prompted for the password each time.
-  security.sudo.wheelNeedsPassword = false;
+  # wheel users must enter their password for sudo (sun's comes from the
+  # sun_password sops secret). Note: membership in the docker group is still
+  # root-equivalent, see virtualisation.docker above.
+  security.sudo.wheelNeedsPassword = true;
 
   # Ship the systemd journal into Loki (replaces promtail, removed in 26.05).
   # Alloy loads every *.alloy file in /etc/alloy; its UI listens on 127.0.0.1:12345.
