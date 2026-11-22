@@ -337,10 +337,33 @@ networking.wireless = {
         '';
       };
     };
+
+    virtualHosts."momentum.philippwieck.com" = {
+      enableACME = true;
+      forceSSL = true;
+      basicAuthFile = config.sops.secrets.momentum_htpasswd.path;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8088";
+        proxyWebsockets = true;
+        extraConfig = ''
+          limit_req zone=general burst=20 nodelay;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
   };
 
   # htpasswd lines for prophet + editor basic auth (kept out of the Nix store)
   sops.secrets.prophet_htpasswd = {
+    owner = "nginx";
+    restartUnits = [ "nginx.service" ];
+  };
+
+  # htpasswd lines for momentum basic auth
+  sops.secrets.momentum_htpasswd = {
     owner = "nginx";
     restartUnits = [ "nginx.service" ];
   };
@@ -597,6 +620,7 @@ networking.wireless = {
       "status.philippwieck.com"
       "prophet.philippwieck.com"
       "editor.prophet.philippwieck.com"
+      "momentum.philippwieck.com"
     ];
     usev4 = "webv4, webv4=https://ipv4.icanhazip.com/";
     usev6 = ""; # IPv4 only (the default would also push AAAA records)
