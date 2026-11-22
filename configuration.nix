@@ -312,7 +312,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8001";
         proxyWebsockets = true;
         extraConfig = ''
-          limit_req zone=prophet burst=100 nodelay;
+          limit_req zone=prophet burst=1000 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -329,7 +329,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8002";
         proxyWebsockets = true;
         extraConfig = ''
-          limit_req zone=prophet burst=100 nodelay;
+          limit_req zone=prophet burst=1000 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -346,7 +346,7 @@ networking.wireless = {
         proxyPass = "http://127.0.0.1:8088";
         proxyWebsockets = true;
         extraConfig = ''
-          limit_req zone=general burst=20 nodelay;
+          limit_req zone=general burst=1000 nodelay;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
